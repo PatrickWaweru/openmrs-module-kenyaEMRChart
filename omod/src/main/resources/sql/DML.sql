@@ -1,10 +1,9 @@
-
 SET @OLD_SQL_MODE=@@SQL_MODE $$
 SET SQL_MODE='' $$
 DROP PROCEDURE IF EXISTS sp_populate_etl_patient_demographics $$
 CREATE PROCEDURE sp_populate_etl_patient_demographics()
 BEGIN
--- initial set up of etl_patient_demographics table
+
 SELECT "Processing patient demographics data ", CONCAT("Time: ", NOW());
 
 insert into kenyaemr_etl.etl_patient_demographics(
@@ -56,7 +55,7 @@ FROM (
      ) p
 ON DUPLICATE KEY UPDATE given_name = p.given_name, middle_name=p.middle_name, family_name=p.family_name;
 
--- update etl_patient_demographics with patient attributes: birthplace, citizenship, mother_name, phone number and kin's details
+
 update kenyaemr_etl.etl_patient_demographics d
 left outer join
 (
@@ -73,7 +72,7 @@ select
        max(if(pat.uuid='b8d0b331-1d2d-4a9a-b741-1816f498bdb6', pa.value, null)) as email_address,
        max(if(pat.uuid='848f5688-41c6-464c-b078-ea6524a3e971', pa.value, null)) as unit,
        max(if(pat.uuid='96a99acd-2f11-45bb-89f7-648dbcac5ddf', pa.value, null)) as cadre,
-       max(if(pat.uuid='9f1f8254-20ea-4be4-a14d-19201fe217bf', pa.value, null)) as rank,
+       max(if(pat.uuid='9f1f8254-20ea-4be4-a14d-19201fe217bf', pa.value, null)) as `rank`,
       greatest(ifnull(pa.date_changed,'0000-00-00'),pa.date_created) as latest_date
 from person_attribute pa
        inner join
@@ -86,18 +85,18 @@ from person_attribute pa
          where pat.retired=0
          ) pat on pat.person_attribute_type_id = pa.person_attribute_type_id
                     and pat.uuid in (
-        '8d8718c2-c2cc-11de-8d13-0010c6dffd0f', -- birthplace
-        '8d871afc-c2cc-11de-8d13-0010c6dffd0f', -- citizenship
-        '8d871d18-c2cc-11de-8d13-0010c6dffd0f', -- mother's name
-        'b2c38640-2603-4629-aebd-3b54f33f1e3a', -- telephone contact
-        '342a1d39-c541-4b29-8818-930916f4c2dc', -- next of kin's contact
-        'd0aa9fd1-2ac5-45d8-9c5e-4317c622c8f5', -- next of kin's relationship
-        '7cf22bec-d90a-46ad-9f48-035952261294', -- next of kin's address
-        '830bef6d-b01f-449d-9f8d-ac0fede8dbd3', -- next of kin's name
-        'b8d0b331-1d2d-4a9a-b741-1816f498bdb6', -- email address
-        '848f5688-41c6-464c-b078-ea6524a3e971', -- unit
-        '96a99acd-2f11-45bb-89f7-648dbcac5ddf', -- cadre
-        '9f1f8254-20ea-4be4-a14d-19201fe217bf' -- rank
+        '8d8718c2-c2cc-11de-8d13-0010c6dffd0f',
+        '8d871afc-c2cc-11de-8d13-0010c6dffd0f',
+        '8d871d18-c2cc-11de-8d13-0010c6dffd0f',
+        'b2c38640-2603-4629-aebd-3b54f33f1e3a',
+        '342a1d39-c541-4b29-8818-930916f4c2dc',
+        'd0aa9fd1-2ac5-45d8-9c5e-4317c622c8f5',
+        '7cf22bec-d90a-46ad-9f48-035952261294',
+        '830bef6d-b01f-449d-9f8d-ac0fede8dbd3',
+        'b8d0b331-1d2d-4a9a-b741-1816f498bdb6',
+        '848f5688-41c6-464c-b078-ea6524a3e971',
+        '96a99acd-2f11-45bb-89f7-648dbcac5ddf',
+        '9f1f8254-20ea-4be4-a14d-19201fe217bf'
 
         )
 where pa.voided=0
@@ -189,8 +188,7 @@ END $$
 DROP PROCEDURE IF EXISTS sp_populate_etl_hiv_enrollment $$
 CREATE PROCEDURE sp_populate_etl_hiv_enrollment()
 BEGIN
--- populate patient_hiv_enrollment table
--- uuid: de78a6be-bfc5-4634-adc3-5f1a280455cc
+
 SELECT "Processing HIV Enrollment data ", CONCAT("Time: ", NOW());
 insert into kenyaemr_etl.etl_hiv_enrollment (
     patient_id,
@@ -275,10 +273,6 @@ where e.voided=0
 group by e.patient_id, e.encounter_id;
 SELECT "Completed processing HIV Enrollment data ", CONCAT("Time: ", NOW());
 END $$
-
-
-
--- ------------- populate etl_hiv_followup--------------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_hiv_followup $$
 CREATE PROCEDURE sp_populate_etl_hiv_followup()
@@ -476,7 +470,7 @@ max(if(o.concept_id=5356,o.value_coded,null)) as who_stage,
             nullif(max(if(o.concept_id=167394 and o.value_coded =146518,'Candida of trachea, bronchi or lungs','')),''),
             nullif(max(if(o.concept_id=167394 and o.value_coded =143744,'Acquired recto-vesicular fistula','')),'')) as who_stage_associated_oi,
 max(if(o.concept_id=1154,o.value_coded,null)) as presenting_complaints,
-null as clinical_notes, -- max(if(o.concept_id=160430,left(trim(o.value_text),600),null)) as clinical_notes ,
+null as clinical_notes,
 max(if(o.concept_id=164948,o.value_coded,null)) as on_anti_tb_drugs ,
 max(if(o.concept_id=164949,o.value_coded,null)) as on_ipt ,
 max(if(o.concept_id=164950,o.value_coded,null)) as ever_on_ipt ,
@@ -549,7 +543,7 @@ max(if(o.concept_id=164940 or (o.concept_id=1282 and o.value_coded = 74250),o.va
 max(if(o.concept_id=162230,o.value_coded,null)) as inh_dispensed,
 max(if(o.concept_id=1658,o.value_coded,null)) as arv_adherence,
 max(if(o.concept_id=160582,o.value_coded,null)) as poor_arv_adherence_reason,
-null as poor_arv_adherence_reason_other, -- max(if(o.concept_id=160632,trim(o.value_text),null)) as poor_arv_adherence_reason_other,
+null as poor_arv_adherence_reason_other,
 max(if(o.concept_id=159423,o.value_coded,null)) as pwp_disclosure,
 max(if(o.concept_id=5616,o.value_coded,null)) as pwp_pead_disclosure,
 max(if(o.concept_id=161557,o.value_coded,null)) as pwp_partner_tested,
@@ -581,8 +575,6 @@ group by e.patient_id,visit_date;
 SELECT "Completed processing HIV Followup data ", CONCAT("Time: ", NOW());
 END $$
 
-
--- ------------- populate etl_laboratory_extract  uuid:  --------------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_laboratory_extract $$
 CREATE PROCEDURE sp_populate_etl_laboratory_extract()
@@ -622,8 +614,7 @@ od.order_reason,
 	END) AS test_result,
     od.date_activated as date_test_requested,
   e.encounter_datetime as date_test_result_received,
--- test requested by
-e.date_created,
+  e.date_created,
 if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
 e.creator
 from encounter e
@@ -637,46 +628,8 @@ left join orders od on od.order_id = o.order_id and od.voided=0
 where e.voided=0
 group by o.obs_id;
 
-/*-- >>>>>>>>>>>>>>> -----------------------------------  Wagners input ------------------------------------------------------------
-insert into kenyaemr_etl.etl_laboratory_extract(
-encounter_id,
-patient_id,
-visit_date,
-visit_id,
-lab_test,
-test_result,
--- date_test_requested,
--- date_test_result_received,
--- test_requested_by,
-date_created,
-created_by
-)
-select
-e.encounter_id,
-e.patient_id,
-e.encounter_datetime as visit_date,
-e.visit_id,
-o.concept_id,
-(CASE when o.concept_id in(5497,730,654,790,856,21) then o.value_numeric
-when o.concept_id in(299,1030,302,32) then o.value_coded
-END) AS test_result,
--- date requested,
--- date result received
--- test requested by
-e.date_created,
-e.creator
-from encounter e, obs o, encounter_type et
-where e.encounter_id=o.encounter_id and o.voided=0
-and o.concept_id in (5497,730,299,654,790,856,1030,21,302,32) and et.encounter_type_id=e.encounter_type
-group by e.encounter_id;
-
--- --------<<<<<<<<<<<<<<<<<<<< ------------------------------------------------------------------------------------------------------
-*/
 SELECT "Completed processing Laboratory data ", CONCAT("Time: ", NOW());
 END $$
-
-
--- ------------- populate etl_pharmacy_extract table--------------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_pharmacy_extract $$
 CREATE PROCEDURE sp_populate_etl_pharmacy_extract()
@@ -717,12 +670,12 @@ select
 	et.name as enc_name,
 	e.location_id,
 	max(if(o.concept_id = 1282 and o.value_coded is not null,o.value_coded, null)) as drug_dispensed,
-	max(if(o.concept_id = 1282, left(cn.name,255), 0)) as drug_name, -- arv:1085
-	max(if(o.concept_id = 1282 and cs.concept_set=1085, 1, 0)) as arv_drug, -- arv:1085
+	max(if(o.concept_id = 1282, left(cn.name,255), 0)) as drug_name,
+	max(if(o.concept_id = 1282 and cs.concept_set=1085, 1, 0)) as arv_drug,
 	max(if(o.concept_id = 1282 and o.value_coded = 105281,1, 0)) as is_ctx,
 	max(if(o.concept_id = 1282 and o.value_coded = 74250,1, 0)) as is_dapsone,
 	max(if(o.concept_id = 1443, o.value_numeric, null)) as dose,
-	max(if(o.concept_id = 159368, if(o.value_numeric > 10000, 10000, o.value_numeric), null)) as duration, -- catching typos in duration field
+	max(if(o.concept_id = 159368, if(o.value_numeric > 10000, 10000, o.value_numeric), null)) as duration,
 	max(if(o.concept_id = 1732 and o.value_coded=1072,'Days',if(o.concept_id=1732 and o.value_coded=1073,'Weeks',if(o.concept_id=1732 and o.value_coded=1074,'Months',null)))) as duration_units,
 	o.voided,
 	o.date_voided,
@@ -731,7 +684,7 @@ from obs o
 	inner join person p on p.person_id=o.person_id and p.voided=0
 	left outer join encounter e on e.encounter_id = o.encounter_id and e.voided=0
 left outer join encounter_type et on et.encounter_type_id = e.encounter_type
-left outer join concept_name cn on o.value_coded = cn.concept_id and cn.locale='en' and cn.concept_name_type='FULLY_SPECIFIED' -- SHORT'
+left outer join concept_name cn on o.value_coded = cn.concept_id and cn.locale='en' and cn.concept_name_type='FULLY_SPECIFIED'
 left outer join concept_set cs on o.value_coded = cs.concept_id
 where o.voided=0 and o.concept_id in(1282,1732,159368,1443,1444)  and e.voided=0
 group by o.obs_group_id, o.person_id, encounter_id
@@ -743,9 +696,6 @@ update kenyaemr_etl.etl_pharmacy_extract
 
 SELECT "Completed processing Pharmacy data ", CONCAT("Time: ", NOW());
 END $$
-
-
--- ------------ create table etl_patient_treatment_event----------------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_program_discontinuation $$
 CREATE PROCEDURE sp_populate_etl_program_discontinuation()
@@ -777,7 +727,7 @@ select
 e.patient_id,
 e.uuid,
 e.visit_id,
-e.encounter_datetime, -- trying to make us of index
+e.encounter_datetime,
 et.uuid,
 (case et.uuid
 	when '2bdada65-4c72-4a48-8730-859890e25cee' then 'HIV'
@@ -820,7 +770,6 @@ group by e.encounter_id;
 SELECT "Completed processing discontinuation data ", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate etl_mch_enrollment-------------------------
 DROP PROCEDURE IF EXISTS sp_populate_etl_mch_enrollment $$
 CREATE PROCEDURE sp_populate_etl_mch_enrollment()
 	BEGIN
@@ -866,7 +815,6 @@ CREATE PROCEDURE sp_populate_etl_mch_enrollment()
 			urine_colour,
 			urine_turbidity,
 			urine_dipstick_for_blood,
-			-- date_of_discontinuation,
 			discontinuation_reason,
 			date_created,
       date_last_modified
@@ -912,7 +860,6 @@ CREATE PROCEDURE sp_populate_etl_mch_enrollment()
 				max(if(o.concept_id=162106,o.value_coded,null)) as urine_colour,
 				max(if(o.concept_id=162101,o.value_coded,null)) as urine_turbidity,
 				max(if(o.concept_id=162096,o.value_coded,null)) as urine_dipstick_for_blood,
-				-- max(if(o.concept_id=161655,o.value_text,null)) as date_of_discontinuation,
 				max(if(o.concept_id=161555,o.value_coded,null)) as discontinuation_reason,
 				e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
@@ -929,8 +876,8 @@ CREATE PROCEDURE sp_populate_etl_mch_enrollment()
 			group by e.encounter_id;
 		SELECT "Completed processing MCH Enrollments ", CONCAT("Time: ", NOW());
 		END $$
--- ------------- populate etl_mch_antenatal_visit-------------------------
-
+    
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_mch_antenatal_visit $$
 CREATE PROCEDURE sp_populate_etl_mch_antenatal_visit()
 	BEGIN
@@ -1209,10 +1156,7 @@ CREATE PROCEDURE sp_populate_etl_mch_antenatal_visit()
 			group by e.patient_id,visit_date;
 		SELECT "Completed processing MCH antenatal visits ", CONCAT("Time: ", NOW());
 		END $$
-
-
--- ------------- populate etl_mchs_delivery-------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_mch_delivery $$
 CREATE PROCEDURE sp_populate_etl_mch_delivery()
 	BEGIN
@@ -1389,9 +1333,8 @@ CREATE PROCEDURE sp_populate_etl_mch_delivery()
 			group by e.encounter_id ;
 		SELECT "Completed processing MCH Delivery visits", CONCAT("Time: ", NOW());
 		END $$
-
--- ------------- populate etl_mchs_discharge-------------------------
-
+    
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_mch_discharge $$
 CREATE PROCEDURE sp_populate_etl_mch_discharge()
 	BEGIN
@@ -1448,9 +1391,7 @@ CREATE PROCEDURE sp_populate_etl_mch_discharge()
 			group by e.encounter_id ;
 		SELECT "Completed processing MCH Discharge visits", CONCAT("Time: ", NOW());
 		END $$
-
--- ------------- populate etl_mch_postnatal_visit-------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_mch_postnatal_visit $$
 CREATE PROCEDURE sp_populate_etl_mch_postnatal_visit()
 	BEGIN
@@ -1658,9 +1599,8 @@ CREATE PROCEDURE sp_populate_etl_mch_postnatal_visit()
 			group by e.encounter_id;
 		SELECT "Completed processing MCH postnatal visits ", CONCAT("Time: ", NOW());
 		END $$
-
--- ------------- populate etl_hei_enrollment-------------------------
-
+    
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_hei_enrolment $$
 CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 	BEGIN
@@ -1674,8 +1614,7 @@ CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 			location_id,
 			encounter_id,
 			child_exposed,
-			-- hei_id_number,
-			spd_number,
+      spd_number,
 			birth_weight,
 			gestation_at_birth,
 			birth_type,
@@ -1690,11 +1629,8 @@ CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 			facility_transferred_from,
 			district_transferred_from,
 			date_first_enrolled_in_hei_care,
-			-- arv_prophylaxis,
 			mother_breastfeeding,
-			-- mother_on_NVP_during_breastfeeding,
 			TB_contact_history_in_household,
-			-- infant_mother_link,
 			mother_alive,
 			mother_on_pmtct_drugs,
 			mother_on_drug,
@@ -1727,8 +1663,7 @@ CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 				e.location_id,
 				e.encounter_id,
 				max(if(o.concept_id=5303,o.value_coded,null)) as child_exposed,
-				-- max(if(o.concept_id=5087,o.value_numeric,null)) as hei_id_number,
-				max(if(o.concept_id=162054,o.value_text,null)) as spd_number,
+        max(if(o.concept_id=162054,o.value_text,null)) as spd_number,
 				max(if(o.concept_id=5916,o.value_numeric,null)) as birth_weight,
 				max(if(o.concept_id=1409,o.value_numeric,null)) as gestation_at_birth,
 				max(if(o.concept_id=159949,o.value_coded,null)) as birth_type,
@@ -1743,12 +1678,9 @@ CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 				max(if(o.concept_id=160535,o.value_text,null)) as facility_transferred_from,
 				max(if(o.concept_id=161551,o.value_text,null)) as district_transferred_from,
 				max(if(o.concept_id=160555,o.value_datetime,null)) as date_first_enrolled_in_hei_care,
-				-- max(if(o.concept_id=1282,o.value_coded,null)) as arv_prophylaxis,
-				max(if(o.concept_id=159941,o.value_coded,null)) as mother_breastfeeding,
-				-- max(if(o.concept_id=1282,o.value_coded,null)) as mother_on_NVP_during_breastfeeding,
-				max(if(o.concept_id=152460,o.value_coded,null)) as TB_contact_history_in_household,
-				-- max(if(o.concept_id=162121,o.value_coded,null)) as infant_mother_link,
-				max(if(o.concept_id=160429,o.value_coded,null)) as mother_alive,
+        max(if(o.concept_id=159941,o.value_coded,null)) as mother_breastfeeding,
+        max(if(o.concept_id=152460,o.value_coded,null)) as TB_contact_history_in_household,
+        max(if(o.concept_id=160429,o.value_coded,null)) as mother_alive,
 				max(if(o.concept_id=1148,o.value_coded,null)) as mother_on_pmtct_drugs,
 				max(if(o.concept_id=1086,o.value_coded,null)) as mother_on_drug,
 				max(if(o.concept_id=162055,o.value_coded,null)) as mother_on_art_at_infant_enrollment,
@@ -1784,10 +1716,7 @@ CREATE PROCEDURE sp_populate_etl_hei_enrolment()
 			group by e.patient_id,visit_date ;
 		SELECT "Completed processing HEI Enrollments", CONCAT("Time: ", NOW());
 		END $$
-
-
--- ------------- populate etl_hei_follow_up_visit-------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_hei_follow_up $$
 CREATE PROCEDURE sp_populate_etl_hei_follow_up()
 	BEGIN
@@ -1830,17 +1759,9 @@ CREATE PROCEDURE sp_populate_etl_hei_follow_up()
 			nvp_given,
 			ctx_given,
 			multi_vitamin_given,
-			-- dna_pcr_dbs_sample_code,
-			-- dna_pcr_results_date,
-			-- first_antibody_sample_date,
-			first_antibody_result,
-			-- first_antibody_dbs_sample_code,
-			-- first_antibody_result_date,
-			-- final_antibody_sample_date,
-			final_antibody_result,
-			-- final_antibody_dbs_sample_code,
-			-- final_antibody_result_date,
-			tetracycline_ointment_given,
+      first_antibody_result,
+      final_antibody_result,
+      tetracycline_ointment_given,
 			pupil_examination,
 			sight_examination,
 			squint,
@@ -1897,17 +1818,9 @@ CREATE PROCEDURE sp_populate_etl_hei_follow_up()
 				max(if(o.concept_id=966 and o.value_coded=80586,o.value_coded,null)) as nvp_given,
 				max(if(o.concept_id=1109,o.value_coded,null)) as ctx_given,
 				max(if(o.concept_id=1193,o.value_coded,null)) as multi_vitamin_given,
-				-- max(if(o.concept_id=162086,o.value_text,null)) as dna_pcr_dbs_sample_code,
-				-- max(if(o.concept_id=160082,o.value_datetime,null)) as dna_pcr_results_date,
-				-- max(if(o.concept_id=159951,o.value_datetime,null)) as first_antibody_sample_date,
-				max(if(o.concept_id=1040,o.value_coded,null)) as first_antibody_result,
-				-- max(if(o.concept_id=162086,o.value_text,null)) as first_antibody_dbs_sample_code,
-				-- max(if(o.concept_id=160082,o.value_datetime,null)) as first_antibody_result_date,
-				-- max(if(o.concept_id=159951,o.value_datetime,null)) as final_antibody_sample_date,
-				max(if(o.concept_id=1326,o.value_coded,null)) as final_antibody_result,
-				-- max(if(o.concept_id=162086,o.value_text,null)) as final_antibody_dbs_sample_code,
-				-- max(if(o.concept_id=160082,o.value_datetime,null)) as final_antibody_result_date,
-				max(if(o.concept_id=162077,o.value_coded,null)) as tetracycline_ointment_given,
+        max(if(o.concept_id=1040,o.value_coded,null)) as first_antibody_result,
+        max(if(o.concept_id=1326,o.value_coded,null)) as final_antibody_result,
+        max(if(o.concept_id=162077,o.value_coded,null)) as tetracycline_ointment_given,
 				max(if(o.concept_id=162064,o.value_coded,null)) as pupil_examination,
 				max(if(o.concept_id=162067,o.value_coded,null)) as sight_examination,
 				max(if(o.concept_id=162066,o.value_coded,null)) as squint,
@@ -1939,9 +1852,7 @@ CREATE PROCEDURE sp_populate_etl_hei_follow_up()
 
 		SELECT "Completed processing HEI Followup visits", CONCAT("Time: ", NOW());
 		END $$
-
--- ------------- populate etl_immunization   --------------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_hei_immunization $$
 CREATE PROCEDURE sp_populate_etl_hei_immunization()
  BEGIN
@@ -2078,9 +1989,8 @@ CREATE PROCEDURE sp_populate_etl_hei_immunization()
 
  SELECT "Completed processing hei_immunization data ", CONCAT("Time: ", NOW());
  END $$
-
--- ------------- populate etl_tb_enrollment-------------------------
-
+ 
+ 
 DROP PROCEDURE IF EXISTS sp_populate_etl_tb_enrollment $$
 CREATE PROCEDURE sp_populate_etl_tb_enrollment()
 BEGIN
@@ -2095,7 +2005,6 @@ location_id,
 encounter_id,
 date_treatment_started,
 district,
--- district_registration_number,
 referred_by,
 referral_date,
 date_transferred_in,
@@ -2119,9 +2028,6 @@ has_extra_pulmonary_skeleton,
 has_extra_pulmonary_abdominal,
 date_created,
 date_last_modified
--- has_extra_pulmonary_other,
--- treatment_outcome,
--- treatment_outcome_date
 )
 select
 e.patient_id,
@@ -2133,7 +2039,6 @@ e.location_id,
 e.encounter_id,
 max(if(o.concept_id=1113,o.value_datetime,null)) as date_treatment_started,
 max(if(o.concept_id=161564,trim(o.value_text),null)) as district,
--- max(if(o.concept_id=5085,o.value_numeric,null)) as district_registration_number,
 max(if(o.concept_id=160540,o.value_coded,null)) as referred_by,
 max(if(o.concept_id=161561,o.value_datetime,null)) as referral_date,
 max(if(o.concept_id=160534,o.value_datetime,null)) as date_transferred_in,
@@ -2157,9 +2062,6 @@ max(if(o.concept_id=161356 and o.value_coded=112116,o.value_coded,null)) as has_
 max(if(o.concept_id=161356 and o.value_coded=1350,o.value_coded,null)) as has_extra_pulmonary_abdominal,
 e.date_created as date_created,
 if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
--- max(if(o.concept_id=161356,o.value_coded,null)) as has_extra_pulmonary_other
--- max(if(o.concept_id=159786,o.value_coded,null)) as treatment_outcome,
--- max(if(o.concept_id=159787,o.value_coded,null)) as treatment_outcome_date
 
 from encounter e
 	inner join person p on p.person_id=e.patient_id and p.voided=0
@@ -2174,9 +2076,6 @@ where e.voided=0
 group by e.encounter_id;
 SELECT "Completed processing TB Enrollments ", CONCAT("Time: ", NOW());
 END $$
-
-
--- ------------- populate etl_tb_follow_up_visit-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_tb_follow_up_visit $$
 CREATE PROCEDURE sp_populate_etl_tb_follow_up_visit()
@@ -2253,9 +2152,6 @@ group by e.encounter_id;
 SELECT "Completed processing TB Followup visits ", CONCAT("Time: ", NOW());
 END $$
 
-
--- ------------- populate etl_tb_screening-------------------------
-
 DROP PROCEDURE IF EXISTS sp_populate_etl_tb_screening $$
 CREATE PROCEDURE sp_populate_etl_tb_screening()
 BEGIN
@@ -2316,7 +2212,7 @@ select
        max(if(o.concept_id=162309,o.value_coded,null)) as started_anti_TB,
        max(if(o.concept_id=1113, date(o.value_datetime),null)) as tb_treatment_start_date,
        max(if(o.concept_id=1109,o.value_coded,null)) as tb_prophylaxis,
-       "" as notes, -- max(case o.concept_id when 160632 then value_text else "" end) as notes
+       "" as notes,
        max(if(o.concept_id=161643,o.value_coded,null)) as person_present,
        e.date_created as date_created,
        if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
@@ -2329,8 +2225,6 @@ group by e.patient_id,visit_date;
 
 SELECT "Completed processing TB Screening data ", CONCAT("Time: ", NOW());
 END $$
-
--- ------------------------------------------- drug event ---------------------------
 
 DROP PROCEDURE IF EXISTS sp_drug_event $$
 CREATE PROCEDURE sp_drug_event()
@@ -2366,8 +2260,7 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 			max(if(o.concept_id=1255,'HIV',if(o.concept_id=1268, 'TB', null))) as program,
 			max(if(o.concept_id=1193,(
 				case o.value_coded
-					-- HIV
-				when 162565 then "3TC/NVP/TDF"
+        when 162565 then "3TC/NVP/TDF"
 				when 164505 then "TDF/3TC/EFV"
 				when 1652 then "AZT/3TC/NVP"
 				when 160124 then "AZT/3TC/EFV"
@@ -2405,8 +2298,7 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 				when 165372 then "ABC/3TC/RAL"
 				when 165373 then "AZT/3TC/RAL/DRV/r"
 				when 165374 then "ABC/3TC/RAL/DRV/r"
-         -- TB
-				when 1675 then "RHZE"
+        when 1675 then "RHZE"
 				when 768 then "RHZ"
 				when 1674 then "SRHZE"
 				when 164978 then "RfbHZE"
@@ -2421,8 +2313,7 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 				end ),null)) as regimen,
 			max(if(o.concept_id=1193,(
 				case o.value_coded
-					-- HIV
-				when 162565 then "3TC+NVP+TDF"
+        when 162565 then "3TC+NVP+TDF"
 				when 164505 then "TDF+3TC+EFV"
 				when 1652 then "AZT+3TC+NVP"
 				when 160124 then "AZT+3TC+EFV"
@@ -2460,8 +2351,7 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 				when 165372 then "ABC+3TC+RAL"
 				when 165373 then "AZT+3TC+RAL+DRV/r"
 				when 165374 then "ABC+3TC+RAL+DRV/r"
-					-- TB
-				when 1675 then "RHZE"
+        when 1675 then "RHZE"
 				when 768 then "RHZ"
 				when 1674 then "SRHZE"
 				when 164978 then "RfbHZE"
@@ -2476,8 +2366,7 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 				end ),null)) as regimen_name,
 			max(if(o.concept_id=163104,(
 				case o.value_text
-				-- patient regimen line
-				when "AF" then "First line"
+        when "AF" then "First line"
 				when "AS" then "Second line"
 				when "AT" then "Third line"
 				when "CF" then "First line"
@@ -2501,17 +2390,13 @@ SELECT "Processing Drug Event Data", CONCAT("Time: ", NOW());
 			inner join
 			(
 				select encounter_type, uuid,name from form where
-					uuid in('da687480-e197-11e8-9f32-f2801f1b9fd1') -- regimen editor form
+					uuid in('da687480-e197-11e8-9f32-f2801f1b9fd1')
 			) f on f.encounter_type=e.encounter_type
 			where e.voided=0
 		group by e.encounter_id;
 
 SELECT "Completed processing Drug Event Data", CONCAT("Time: ", NOW());
 END $$
-
-
-
--- ------------------------------------ populate hts test table ----------------------------------------
 
 
 DROP PROCEDURE IF EXISTS sp_populate_hts_test $$
@@ -2577,7 +2462,7 @@ e.creator,
 e.date_created,
 if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
 e.encounter_datetime as visit_date,
-max(if((o.concept_id=162084 and o.value_coded=162082 and f.uuid = "402dc5d7-46da-42d4-b2be-f43ea4ad87b0") or (f.uuid = "b08471f6-0892-4bf7-ab2b-bf79797b8ea4"), 2, 1)) as test_type , -- 2 for confirmation, 1 for initial
+max(if((o.concept_id=162084 and o.value_coded=162082 and f.uuid = "402dc5d7-46da-42d4-b2be-f43ea4ad87b0") or (f.uuid = "b08471f6-0892-4bf7-ab2b-bf79797b8ea4"), 2, 1)) as test_type,
 max(if(o.concept_id=164930,(case o.value_coded when 164928 then "General Population" when 164929 then "Key Population" when 138643 then "Priority Population" else "" end),null)) as population_type,
 max(if(o.concept_id=160581 and o.value_coded in(105,160578,160579,165100,162277,5622), (case o.value_coded when 105 then "People who inject drugs" when 160578 then "Men who have sex with men" when 160579 then "Female sex worker" when 165100 then "Transgender" when 162277 then "People in prison and other closed settings" when 5622 then "Other"  else null end),null)) as key_population_type,
 max(if(o.concept_id=160581 and o.value_coded in(159674,162198,160549,162277,1175,165192), (case o.value_coded when 159674 then "Fisher folk" when 162198 then "Truck driver" when 160549 then "Adolescent and young girls" when 162277 then "Prisoner" when 1175 then "Not applicable" when 165192 then "Military and other uniformed services" else null end),null)) as priority_population_type,
@@ -2656,9 +2541,6 @@ group by e.encounter_id;
 SELECT "Completed processing hts tests";
 END $$
 
-
--- ------------------------------------ POPULATE HTS LINKAGES AND REFERRALS -------------------------------
-
 DROP PROCEDURE IF EXISTS sp_populate_hts_linkage_and_referral $$
 CREATE PROCEDURE sp_populate_hts_linkage_and_referral()
 BEGIN
@@ -2719,9 +2601,6 @@ INSERT INTO kenyaemr_etl.etl_hts_referral_and_linkage (
 
 END $$
 
-
--- ------------------------------------ update hts referral table ---------------------------------
-
 DROP PROCEDURE IF EXISTS sp_populate_hts_referral $$
 CREATE PROCEDURE sp_populate_hts_referral()
   BEGIN
@@ -2764,10 +2643,7 @@ CREATE PROCEDURE sp_populate_hts_referral()
     SELECT "Completed processing hts referrals";
 
     END $$
-
--- ----------------------------------- UPDATE DASHBOARD TABLE ---------------------
-
-
+    
 DROP PROCEDURE IF EXISTS sp_update_dashboard_table $$
 CREATE PROCEDURE sp_update_dashboard_table()
 BEGIN
@@ -2780,7 +2656,7 @@ SET startDate = DATE_FORMAT(NOW() - INTERVAL 1 MONTH, '%Y-%m-01');
 SET endDate = DATE_FORMAT(LAST_DAY(NOW() - INTERVAL 1 MONTH), '%Y-%m-%d');
 SET reportingPeriod = DATE_FORMAT(NOW() - INTERVAL 1 MONTH, '%Y-%M');
 
--- CURRENT IN CARE
+
 DROP TABLE IF EXISTS kenyaemr_etl.etl_current_in_care;
 
 CREATE TABLE kenyaemr_etl.etl_current_in_care AS
@@ -2808,8 +2684,7 @@ CREATE TABLE kenyaemr_etl.etl_current_in_care AS
 		((timestampdiff(DAY,date(latest_tca),date(endDate)) <= 30 or timestampdiff(DAY,date(latest_tca),date(curdate())) <= 30) and ((date(d.effective_disc_date) > date(endDate) or date(enroll_date) > date(d.effective_disc_date)) or d.effective_disc_date is null))
 		and (date(latest_vis_date) >= date(date_discontinued) or date(latest_tca) >= date(date_discontinued) or disc_patient is null)
 	);
-
--- ADD INDICES
+  
 ALTER TABLE kenyaemr_etl.etl_current_in_care ADD INDEX(enroll_date);
 ALTER TABLE kenyaemr_etl.etl_current_in_care ADD INDEX(latest_vis_date);
 ALTER TABLE kenyaemr_etl.etl_current_in_care ADD INDEX(latest_tca);
@@ -2862,8 +2737,7 @@ from (
      group by e.patient_id
      having TI_on_art=0
      )net;
-
--- populate people booked today
+     
 TRUNCATE TABLE kenyaemr_etl.etl_patients_booked_today;
 ALTER TABLE kenyaemr_etl.etl_patients_booked_today AUTO_INCREMENT = 1;
 
@@ -2871,7 +2745,6 @@ INSERT INTO kenyaemr_etl.etl_patients_booked_today(patient_id, last_visit_date)
 SELECT patient_id, visit_date FROM kenyaemr_etl.etl_patient_hiv_followup
 GROUP BY patient_id HAVING max(date(next_appointment_date)) = CURDATE();
 
---Viral load tracker
 DROP TABLE IF EXISTS kenyaemr_etl.etl_viral_load_tracker;
 
 CREATE TABLE kenyaemr_etl.etl_viral_load_tracker (
@@ -2925,7 +2798,6 @@ date_sub(curdate() , interval 12 MONTH) and date(curdate())
 )vl
 on t.patient_id = vl.patient_id;
 
---Tested contacts
 DROP TABLE IF EXISTS kenyaemr_etl.etl_hts_contacts;
 
 CREATE TABLE kenyaemr_etl.etl_hts_contacts AS
@@ -2936,7 +2808,6 @@ ALTER TABLE kenyaemr_etl.etl_hts_contacts ADD INDEX(id);
 ALTER TABLE kenyaemr_etl.etl_hts_contacts ADD INDEX(patient_id);
 ALTER TABLE kenyaemr_etl.etl_hts_contacts ADD INDEX(visit_date);
 
---Linked contacts
 DROP TABLE IF EXISTS kenyaemr_etl.etl_contacts_linked;
 
 CREATE TABLE kenyaemr_etl.etl_contacts_linked AS
@@ -2950,9 +2821,6 @@ ALTER TABLE kenyaemr_etl.etl_contacts_linked ADD INDEX(visit_date);
 SELECT "Completed processing dashboard indicators", CONCAT("Time: ", NOW());
 
 END $$
-
-
--- ------------- populate etl_ipt_screening-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_ipt_screening $$
 CREATE PROCEDURE sp_populate_etl_ipt_screening()
@@ -3012,9 +2880,6 @@ SELECT "Completed processing TPT screening forms", CONCAT("Time: ", NOW());
 END $$
 
 
-
--- ------------- populate etl_ipt_followup-------------------------
-
 DROP PROCEDURE IF EXISTS sp_populate_etl_ipt_follow_up $$
 CREATE PROCEDURE sp_populate_etl_ipt_follow_up()
 BEGIN
@@ -3064,7 +2929,6 @@ group by e.encounter_id;
 SELECT "Completed processing TPT followup forms", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate defaulter tracing-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_ccc_defaulter_tracing $$
 CREATE PROCEDURE sp_populate_etl_ccc_defaulter_tracing()
@@ -3084,7 +2948,6 @@ missed_appointment_date,
 reason_for_missed_appointment,
 non_coded_missed_appointment_reason,
 tracing_outcome,
-reason_not_contacted,
 attempt_number,
 is_final_trace,
 true_status,
@@ -3101,7 +2964,6 @@ max(if(o.concept_id=164093,date(o.value_datetime),null)) as missed_appointment_d
 max(if(o.concept_id = 1801, o.value_coded, null )) as reason_for_missed_appointment,
 max(if(o.concept_id = 163513, o.value_text, "" )) as non_coded_missed_appointment_reason,
 max(if(o.concept_id = 160721, o.value_coded, null )) as tracing_outcome,
-max(if(o.concept_id = 166541, o.value_coded, null )) as reason_not_contacted,
 max(if(o.concept_id = 1639, value_numeric, "" )) as attempt_number,
 max(if(o.concept_id = 163725, o.value_coded, "" )) as is_final_trace,
 max(if(o.concept_id = 160433, o.value_coded, "" )) as true_status,
@@ -3113,13 +2975,12 @@ if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_l
 from encounter e
 	inner join person p on p.person_id=e.patient_id and p.voided=0
 	inner join form f on f.form_id=e.form_id and f.uuid in ("a1a62d1e-2def-11e9-b210-d663bd873d93")
-inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164966,164093,1801, 163513, 160721, 1639, 163725, 160433, 1599, 160716,163526,166541) and o.voided=0
+inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164966,164093,1801, 163513, 160721, 1639, 163725, 160433, 1599, 160716,163526) and o.voided=0
 where e.voided=0
 group by e.encounter_id;
 SELECT "Completed processing CCC defaulter tracing forms", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate etl_ART_preparation-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_ART_preparation $$
 CREATE PROCEDURE sp_populate_etl_ART_preparation()
@@ -3203,9 +3064,8 @@ date_last_modified
     group by e.encounter_id;
     SELECT "Completed processing ART Preparation ", CONCAT("Time: ", NOW());
     END $$
-
--- ------------- populate etl_enhanced_adherence-------------------------
-
+    
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_enhanced_adherence $$
 CREATE PROCEDURE sp_populate_etl_enhanced_adherence()
 	BEGIN
@@ -3324,9 +3184,7 @@ CREATE PROCEDURE sp_populate_etl_enhanced_adherence()
 			group by e.encounter_id;
 		SELECT "Completed processing Enhanced Adherence ", CONCAT("Time: ", NOW());
 		END $$
-
--- ------------- populate etl_patient_triage--------------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_patient_triage $$
 CREATE PROCEDURE sp_populate_etl_patient_triage()
 	BEGIN
@@ -3397,10 +3255,7 @@ CREATE PROCEDURE sp_populate_etl_patient_triage()
 		;
 		SELECT "Completed processing Patient Triage data ", CONCAT("Time: ", NOW());
 		END $$
-
-
--- ------------- populate etl_prep_behaviour_risk_assessment-------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_prep_behaviour_risk_assessment $$
 CREATE PROCEDURE sp_populate_etl_prep_behaviour_risk_assessment()
   BEGIN
@@ -3510,9 +3365,8 @@ CREATE PROCEDURE sp_populate_etl_prep_behaviour_risk_assessment()
     group by e.encounter_id;
     SELECT "Completed processing Behaviour risk assessment forms", CONCAT("Time: ", NOW());
   END $$
-
--- ------------- populate etl_prep_monthly_refill-------------------------
-
+  
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_prep_monthly_refill $$
 CREATE PROCEDURE sp_populate_etl_prep_monthly_refill()
   BEGIN
@@ -3586,9 +3440,8 @@ CREATE PROCEDURE sp_populate_etl_prep_monthly_refill()
     group by e.encounter_id;
     SELECT "Completed processing monthly refill", CONCAT("Time: ", NOW());
   END $$
-
--- ------------- populate etl_prep_discontinuation-------------------------
-
+  
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_prep_discontinuation $$
 CREATE PROCEDURE sp_populate_etl_prep_discontinuation()
   BEGIN
@@ -3637,9 +3490,7 @@ CREATE PROCEDURE sp_populate_etl_prep_discontinuation()
     group by e.encounter_id;
     SELECT "Completed processing PrEP discontinuation", CONCAT("Time: ", NOW());
   END $$
-
--- ------------- populate etl_prep_enrollment-------------------------
-
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_prep_enrolment $$
 CREATE PROCEDURE sp_populate_etl_prep_enrolment()
   BEGIN
@@ -3709,9 +3560,8 @@ CREATE PROCEDURE sp_populate_etl_prep_enrolment()
     group by e.encounter_id;
     SELECT "Completed processing PrEP enrolment", CONCAT("Time: ", NOW());
   END $$
-
--- ------------- populate etl_prep_followup-------------------------
-
+  
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_prep_followup $$
 CREATE PROCEDURE sp_populate_etl_prep_followup()
   BEGIN
@@ -3861,9 +3711,8 @@ CREATE PROCEDURE sp_populate_etl_prep_followup()
     group by e.patient_id,visit_date;
     SELECT "Completed processing PrEP follow-up form", CONCAT("Time: ", NOW());
   END $$
-
--- ------------- populate etl_progress_note-------------------------
-
+  
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_progress_note $$
 CREATE PROCEDURE sp_populate_etl_progress_note()
   BEGIN
@@ -3895,7 +3744,8 @@ CREATE PROCEDURE sp_populate_etl_progress_note()
     SELECT "Completed processing progress note", CONCAT("Time: ", NOW());
 
 END $$
-		---------------------------------------- populate tpt initiation -----------------------------
+
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_ipt_initiation $$
 CREATE PROCEDURE sp_populate_etl_ipt_initiation()
 	BEGIN
@@ -3947,7 +3797,7 @@ group by pi.patient_id) pid on pid.patient_id=i.patient_id
 set i.sub_county_reg_number=pid.sub_county_reg_number;
 END $$
 
-	-- ------------------------------------- process tpt followup -------------------------
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_ipt_followup $$
 CREATE PROCEDURE sp_populate_etl_ipt_followup()
 	BEGIN
@@ -4002,7 +3852,7 @@ CREATE PROCEDURE sp_populate_etl_ipt_followup()
 		;
 		SELECT "Completed processing TPT followup data ", CONCAT("Time: ", NOW());
 		END $$
-		-- ----------------------------------- process tpt outcome ---------------------------
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_ipt_outcome $$
 CREATE PROCEDURE sp_populate_etl_ipt_outcome()
 	BEGIN
@@ -4042,8 +3892,8 @@ CREATE PROCEDURE sp_populate_etl_ipt_outcome()
 			group by e.encounter_id;
 		SELECT "Completed processing TPT outcome ", CONCAT("Time: ", NOW());
 		END $$
-
-		-- --------------------------------------- process HTS linkage tracing ------------------------
+		
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_hts_linkage_tracing $$
 CREATE PROCEDURE sp_populate_etl_hts_linkage_tracing()
 	BEGIN
@@ -4089,9 +3939,8 @@ CREATE PROCEDURE sp_populate_etl_hts_linkage_tracing()
 		;
 		SELECT "Completed processing HTS linkage tracing data ", CONCAT("Time: ", NOW());
 		END $$
-
-		-- ------------------------- process patient program ------------------------
-
+		
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_patient_program $$
 CREATE PROCEDURE sp_populate_etl_patient_program()
 	BEGIN
@@ -4135,9 +3984,7 @@ CREATE PROCEDURE sp_populate_etl_patient_program()
 		;
 		SELECT "Completed processing patient program data ", CONCAT("Time: ", NOW());
 		END $$
-
-  -- ------------------- populate person address table -------------
-
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_person_address $$
 CREATE PROCEDURE sp_populate_etl_person_address()
   BEGIN
@@ -4173,9 +4020,7 @@ CREATE PROCEDURE sp_populate_etl_person_address()
     ;
     SELECT "Completed processing person_address data ", CONCAT("Time: ", NOW());
     END $$
-
-    	 -- --------------------------------------- process OTZ enrollment ------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_populate_etl_otz_enrollment $$
 CREATE PROCEDURE sp_populate_etl_otz_enrollment()
 	BEGIN
@@ -4233,9 +4078,7 @@ CREATE PROCEDURE sp_populate_etl_otz_enrollment()
 		;
 		SELECT "Completed processing OTZ enrollment data ", CONCAT("Time: ", NOW());
 		END $$
-
-
-    -- --------------------------------------- process OTZ activity ------------------------
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_otz_activity $$
 CREATE PROCEDURE sp_populate_etl_otz_activity()
 	BEGIN
@@ -4298,11 +4141,7 @@ CREATE PROCEDURE sp_populate_etl_otz_activity()
 		;
 		SELECT "Completed processing OTZ activity data ", CONCAT("Time: ", NOW());
 		END $$
-
-
-
--- ------------------------- create table for default facility ------------------------
-
+    
 DROP PROCEDURE IF EXISTS sp_create_default_facility_table $$
 CREATE PROCEDURE sp_create_default_facility_table()
 	BEGIN
@@ -4319,9 +4158,7 @@ CREATE PROCEDURE sp_create_default_facility_table()
 
 		SELECT "Completed processing information about default facility ", CONCAT("Time: ", NOW());
 		END $$
-
-		    	 -- --------------------------------------- process OVC enrollment ------------------------
-
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_ovc_enrolment $$
 CREATE PROCEDURE sp_populate_etl_ovc_enrolment()
 	BEGIN
@@ -4383,10 +4220,7 @@ CREATE PROCEDURE sp_populate_etl_ovc_enrolment()
     ;
 		SELECT "Completed processing OVC enrolment data ", CONCAT("Time: ", NOW());
 		END $$
-
-
--- -------------populate etl_cervical_cancer_screening-------------------------
-
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_cervical_cancer_screening $$
 CREATE PROCEDURE sp_populate_etl_cervical_cancer_screening()
 BEGIN
@@ -4520,7 +4354,6 @@ select
 	    if(t.pap_smear_treatment_method is not null and f.uuid="be5c5602-0a1d-11eb-9e20-37d2e56925ee", t.pap_smear_treatment_method, null))) as pap_smear_treatment_method,
      max(if(t1.via_vili_treatment_method is not null and f.uuid = "0c93b93c-bfef-4d2a-9fbe-16b59ee366e7", t1.via_vili_treatment_method,
 	    if(t.via_vili_treatment_method is not null and f.uuid="be5c5602-0a1d-11eb-9e20-37d2e56925ee", t.via_vili_treatment_method, null))) as via_vili_treatment_method,
-                   -- Getting colorectal cancer screening data
       max(if(o.concept_id = 116030 and o.value_coded = 133350, 'Yes', null))as colorectal_cancer,
       max(if(o.concept_id = 164959 and o.value_coded = 159362, 'fecal occult', null))as fecal_occult_screening_method,
       max(if(o.concept_id = 164959 and o.value_coded = 1000148, 'colonoscopy', null))as colonoscopy_method,
@@ -4536,7 +4369,6 @@ select
                                   when 1000143 then 'Refer for biopsy'
                                   when 1000103 then 'Referred for further management'
                                   when 162907 then 'Refer to surgical resection' else '' end),null)) as colonoscopy_method_treatment,
-  -- Getting retinoblastoma cancer screening data
   max(if(o.concept_id = 116030 and o.value_coded = 127527, 'Yes', null))as retinoblastoma_cancer,
   max(if(o.concept_id = 163589 and o.value_coded = 1000149, 'EUA(Examination Under Anesthesia)', null))as retinoblastoma_eua_screening_method,
   max(if(o.concept_id = 163589 and o.value_coded = 1000105, 'Retinoblastoma gene (RB1 gene)', null))as retinoblastoma_gene_method,
@@ -4554,8 +4386,7 @@ select
      max(if(o.concept_id = 1169, 'Yes',null)) as prostatic_specific_antigen_test,
      max(if(o.concept_id = 1169, case o.value_coded when 1000113 then '0-4ng/ml' when 1000114 then '4-10ng/ml' when 1000115 then '>10ng/ml' end, null)) as prostatic_specific_antigen_results,
      max(if(o.concept_id = 1000111 and o.value_coded in (1000081,1000121,1000143), case o.value_coded when 1000081 then 'Routine follow up after 2 years' when 1000121 then 'Further evaluation' when 1000121 then 'Further evaluation' when 1000143 then 'Perform/refer for biopsy' end, null)) as prostatic_specific_antigen_treatment,
-
- -- Getting oral cancer screening data
+     
  max(if(o.concept_id = 116030 and o.value_coded = 115355, 'Yes', null))as oral_cancer,
  max(if(o.concept_id = 163308, 'Yes', null))as oral_cancer_visual_exam_method,
  max(if(o.concept_id = 167139, 'Yes', null))as oral_cancer_cytology_method,
@@ -4573,8 +4404,7 @@ select
                                   when 1000121 then "Referred for further evaluation" else "" end),null)) as oral_cancer_imaging_treatment,
  max(if(o.concept_id = 1000154, (case o.value_coded when 1000078 then "Counsel on negative findings"
                                   when 1000121 then "Referred for further evaluation" else "" end),null)) as oral_cancer_biopsy_treatment,
-
-  -- Getting breast cancer screening data
+  
   max(if(o.concept_id = 116030 and o.value_coded = 116026, 'Yes', null))as breast_cancer,
   max(if(o.concept_id = 1000090 and o.value_coded = 1065, 'clinical breast examination', null))as clinical_breast_examination_screening_method,
   max(if(o.concept_id = 1000090 and o.value_coded = 1000092, 'ultrasound', null))as ultrasound_screening_method,
@@ -4724,7 +4554,7 @@ left join (
              LEFT JOIN obs o1 ON e.encounter_id = o1.encounter_id AND o1.concept_id in (165266,164934)
              where o.concept_id = 163589 and o.value_coded in (164805,164977) and  o.voided=0
              group by e.encounter_id
-           ) t1 on e.encounter_id = t1.encounter_id -- Getting legacy data for via screening result and treatment method
+           ) t1 on e.encounter_id = t1.encounter_id
 left join (
              select
                o.person_id,
@@ -4743,7 +4573,7 @@ left join (
              LEFT JOIN obs o1 ON e.encounter_id = o1.encounter_id AND o1.concept_id in (165266,164934)
              where o.concept_id = 163589 and o.value_coded=159859 and  o.voided=0
              group by e.encounter_id
-           ) t2 on e.encounter_id = t2.encounter_id -- Getting legacy data for HPV screening result and treatment method
+           ) t2 on e.encounter_id = t2.encounter_id
 left join (
              select
                o.person_id,
@@ -4762,7 +4592,7 @@ left join (
              LEFT JOIN obs o1 ON e.encounter_id = o1.encounter_id AND o1.concept_id in (165266,164934)
              where o.concept_id = 163589 and o.value_coded=160705 and  o.voided=0
              group by e.encounter_id
-           ) t3 on e.encounter_id = t3.encounter_id -- Getting legacy data for colposcopy screening result and treatment method
+           ) t3 on e.encounter_id = t3.encounter_id
 left join (
              select
                o.person_id,
@@ -4781,13 +4611,13 @@ left join (
              LEFT JOIN obs o1 ON e.encounter_id = o1.encounter_id AND o1.concept_id in (165266,164934)
              where o.concept_id = 163589 and o.value_coded=885 and  o.voided=0
              group by e.encounter_id
-           ) t4 on e.encounter_id = t4.encounter_id -- Getting legacy data for PAP smear screening result and treatment method
+           ) t4 on e.encounter_id = t4.encounter_id
 
 where e.voided=0
 group by e.encounter_id;
 SELECT "Completed processing Cervical Cancer Screening", CONCAT("Time: ", NOW());
 END $$
-		--------------------------- process patient contact ------------------------
+
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_patient_contact $$
 CREATE PROCEDURE sp_populate_etl_patient_contact()
@@ -4850,9 +4680,7 @@ CREATE PROCEDURE sp_populate_etl_patient_contact()
 		;
 		SELECT "Completed processing patient contact data ", CONCAT("Time: ", NOW());
 		END $$
-
-				-- ------------------------- process contact trace ------------------------
-
+		
 DROP PROCEDURE IF EXISTS sp_populate_etl_client_trace $$
 CREATE PROCEDURE sp_populate_etl_client_trace()
 	BEGIN
@@ -5097,10 +4925,7 @@ CREATE PROCEDURE sp_populate_etl_client_trace()
     group by e.patient_id, e.encounter_id;
     SELECT "Completed processing KP client enrollment data", CONCAT("Time: ", NOW());
     END $$
-
-
-    -- ------------- populate etl_kp_clinical_visit--------------------------------
-
+    
     DROP PROCEDURE IF EXISTS sp_populate_etl_kp_clinical_visit $$
     CREATE PROCEDURE sp_populate_etl_kp_clinical_visit()
       BEGIN
@@ -5381,9 +5206,7 @@ CREATE PROCEDURE sp_populate_etl_client_trace()
         group by e.patient_id, e.encounter_id, visit_date;
         SELECT "Completed processing Clinical visit data ", CONCAT("Time: ", NOW());
         END $$
-
-    -- ------------- populate etl_kp_sti_treatment--------------------------------
-
+        
         DROP PROCEDURE IF EXISTS sp_populate_etl_kp_sti_treatment $$
         CREATE PROCEDURE sp_populate_etl_kp_sti_treatment()
           BEGIN
@@ -5462,9 +5285,8 @@ CREATE PROCEDURE sp_populate_etl_client_trace()
             SELECT "Completed processing STI Treatment data ", CONCAT("Time: ", NOW());
 
     END $$
-    -- ------------- populate etl_kp_peer_calendar--------------------------------
-
-        DROP PROCEDURE IF EXISTS sp_populate_etl_kp_peer_calendar $$
+    
+    DROP PROCEDURE IF EXISTS sp_populate_etl_kp_peer_calendar $$
         CREATE PROCEDURE sp_populate_etl_kp_peer_calendar()
           BEGIN
             SELECT "Processing Peer calendar ", CONCAT("Time: ", NOW());
@@ -5553,10 +5375,7 @@ CREATE PROCEDURE sp_populate_etl_client_trace()
             group by e.patient_id, e.encounter_id, visit_date;
             SELECT "Completed processing Peer calendar data ", CONCAT("Time: ", NOW());
             END $$
-
-
--- ------------- populate kp peer tracking-------------------------
-
+            
 DROP PROCEDURE IF EXISTS sp_populate_etl_kp_peer_tracking $$
 CREATE PROCEDURE sp_populate_etl_kp_peer_tracking()
 BEGIN
@@ -5614,7 +5433,6 @@ group by e.encounter_id;
 SELECT "Completed processing peer tracking form", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate kp treatment verification-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_kp_treatment_verification $$
 CREATE PROCEDURE sp_populate_etl_kp_treatment_verification()
@@ -5727,7 +5545,7 @@ where e.voided=0
 group by e.encounter_id;
 SELECT "Completed processing treatment verification form", CONCAT("Time: ", NOW());
 END $$
--- ------------- populate kp Gender based violence-------------------------
+
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_gender_based_violence $$
 CREATE PROCEDURE sp_populate_etl_gender_based_violence()
@@ -5836,8 +5654,6 @@ SELECT "Completed processing gender based violence form", CONCAT("Time: ", NOW()
 END $$
 
 
--- ------------- populate kp PrEP verification-------------------------
-
 DROP PROCEDURE IF EXISTS sp_populate_etl_PrEP_verification $$
 CREATE PROCEDURE sp_populate_etl_PrEP_verification()
 BEGIN
@@ -5891,7 +5707,6 @@ group by e.encounter_id;
 SELECT "Completed processing PrEP verification form", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate etl_alcohol_drug_abuse_screening-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_alcohol_drug_abuse_screening $$
 CREATE PROCEDURE sp_populate_etl_alcohol_drug_abuse_screening()
@@ -5930,7 +5745,7 @@ group by e.encounter_id;
 SELECT "Completed processing Alcohol and Drug Abuse Screening(CAGE-AID/CRAFFT) data ", CONCAT("Time: ", NOW());
 END $$
 
-      -- ------------- populate etl_gbv_screening-------------------------
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_gbv_screening $$
 CREATE PROCEDURE sp_populate_etl_gbv_screening()
 BEGIN
@@ -5974,7 +5789,6 @@ group by e.encounter_id;
 SELECT "Completed processing gbv screening data ", CONCAT("Time: ", NOW());
 END $$
 
-      -- ------------- populate etl_gbv_screening_action-------------------------
 
 DROP PROCEDURE IF EXISTS sp_populate_etl_gbv_screening_action $$
 CREATE PROCEDURE sp_populate_etl_gbv_screening_action()
@@ -6017,7 +5831,6 @@ group by o.id order by o.concept_id;
 SELECT "Completed processing gbv screening action data ", CONCAT("Time: ", NOW());
 END $$
 
--- ------------- populate etl_depression_screening-------------------------
 DROP PROCEDURE IF EXISTS sp_populate_etl_depression_screening $$
 CREATE PROCEDURE sp_populate_etl_depression_screening()
 BEGIN
@@ -6051,7 +5864,7 @@ group by e.encounter_id;
 SELECT "Completed processing depression screening data ", CONCAT("Time: ", NOW());
 END $$
 
--- Populate Adverse events
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_adverse_events $$
 CREATE PROCEDURE sp_populate_etl_adverse_events()
 BEGIN
@@ -6113,7 +5926,6 @@ group by o1.obs_id;
 SELECT "Completed processing adverse events data ", CONCAT("Time: ", NOW());
 END $$
 
--- Populate Allergy and chronic illness----
 DROP PROCEDURE IF EXISTS sp_populate_etl_allergy_chronic_illness $$
 CREATE PROCEDURE sp_populate_etl_allergy_chronic_illness()
 BEGIN
@@ -6164,7 +5976,6 @@ group by o1.obs_id;
 SELECT "Completed processing allergy and chronic illness data ", CONCAT("Time: ", NOW());
 END $$
 
--- Populate etl_pre_hiv_enrollment_ART
 DROP PROCEDURE IF EXISTS sp_populate_etl_pre_hiv_enrollment_art $$
 CREATE PROCEDURE sp_populate_etl_pre_hiv_enrollment_art()
 BEGIN
@@ -6215,9 +6026,7 @@ where e.voided=0
 group by o1.obs_id;
 
 SELECT "Completed processing pre hiv enrollment ART data ", CONCAT("Time: ", NOW());
-END$$
-
--- ------------- populate etl_covid_19_assessment-------------------------
+END $$
 DROP PROCEDURE IF EXISTS sp_populate_etl_covid_19_assessment $$
 CREATE PROCEDURE sp_populate_etl_covid_19_assessment()
 BEGIN
@@ -6403,7 +6212,6 @@ group by o3.visit_id;
 SELECT "Completed processing covid_19 assessment data ", CONCAT("Time: ", NOW());
 END $$
 
--- Populate etl_vmmc_enrolment
 DROP PROCEDURE IF EXISTS sp_populate_etl_vmmc_enrolment $$
 CREATE PROCEDURE sp_populate_etl_vmmc_enrolment()
 BEGIN
@@ -6444,8 +6252,7 @@ BEGIN
 
     SELECT "Completed processing vmmc enrolment data ", CONCAT("Time: ", NOW());
     END $$
-
-    -- Populate etl_vmmc_circumcision_procedure
+    
     DROP PROCEDURE IF EXISTS sp_populate_etl_vmmc_circumcision_procedure $$
     CREATE PROCEDURE sp_populate_etl_vmmc_circumcision_procedure()
     BEGIN
@@ -6524,8 +6331,7 @@ BEGIN
 
         SELECT "Completed processing vmmc circumcision procedure data ", CONCAT("Time: ", NOW());
         END $$
-
--- Populate etl_vmmc_client_followup
+        
 DROP PROCEDURE IF EXISTS sp_populate_etl_vmmc_client_followup $$
 CREATE PROCEDURE sp_populate_etl_vmmc_client_followup()
   BEGIN
@@ -6588,9 +6394,7 @@ CREATE PROCEDURE sp_populate_etl_vmmc_client_followup()
 
     SELECT "Completed processing vmmc client followup data ", CONCAT("Time: ", NOW());
     END $$
-
-    -- Populate etl_vmmc_medical_history
-
+    
     DROP PROCEDURE IF EXISTS sp_populate_etl_vmmc_medical_history $$
     CREATE PROCEDURE sp_populate_etl_vmmc_medical_history()
     BEGIN
@@ -6714,9 +6518,8 @@ CREATE PROCEDURE sp_populate_etl_vmmc_client_followup()
 
         SELECT "Completed processing vmmc medical examination form data ", CONCAT("Time: ", NOW());
         END $$
-
-    -- Populate etl_vmmc_post_operation_assessment
-
+        
+        
     DROP PROCEDURE IF EXISTS sp_populate_etl_vmmc_post_operation_assessment $$
     CREATE PROCEDURE sp_populate_etl_vmmc_post_operation_assessment()
     BEGIN
@@ -6783,9 +6586,7 @@ CREATE PROCEDURE sp_populate_etl_vmmc_client_followup()
         group by e.patient_id, date(e.encounter_datetime);
 
         END $$
-
--- Populate etl_vmmc_post_operation_assessment
-
+        
 DROP PROCEDURE IF EXISTS sp_populate_etl_hts_eligibility_screening $$
 CREATE PROCEDURE sp_populate_etl_hts_eligibility_screening()
   BEGIN
@@ -6982,8 +6783,8 @@ CREATE PROCEDURE sp_populate_etl_hts_eligibility_screening()
                       group by e.patient_id,date(e.encounter_datetime);
     SELECT "Completed processing hts eligibility screening";
   END $$
-
--- Populating etl_drug_order
+  
+  
 DROP PROCEDURE IF EXISTS sp_populate_etl_drug_order $$
 CREATE PROCEDURE sp_populate_etl_drug_order()
 BEGIN
@@ -7074,7 +6875,7 @@ BEGIN
     SELECT 'Completed processing drug orders';
 END $$
 
--- Populating etl_preventive_services table
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_preventive_services $$
 CREATE PROCEDURE sp_populate_etl_preventive_services()
 BEGIN
@@ -7176,7 +6977,8 @@ BEGIN
     group by y.obs_group_id;
     SELECT 'Completed processing preventive services';
 END $$
--- Procedure sp_populate_etl_overdose_reporting --
+
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_overdose_reporting $$
 CREATE PROCEDURE sp_populate_etl_overdose_reporting()
 BEGIN
@@ -7260,7 +7062,6 @@ BEGIN
     SELECT "Completed processing overdose reporting";
 END $$
 
--- Procedure sp_populate_etl_art_fast_track --
 DROP PROCEDURE IF EXISTS sp_populate_etl_art_fast_track $$
 CREATE PROCEDURE sp_populate_etl_art_fast_track()
 BEGIN
@@ -7353,12 +7154,11 @@ BEGIN
     group by e.patient_id;
     SELECT "Completed processing ART fast track";
 END $$
-    -- end of dml procedures
 
-		SET sql_mode=@OLD_SQL_MODE $$
 
--- ------------------------------------------- running all procedures -----------------------------
-
+SET sql_mode=@OLD_SQL_MODE $$
+    
+    
 DROP PROCEDURE IF EXISTS sp_first_time_setup $$
 CREATE PROCEDURE sp_first_time_setup()
 BEGIN
@@ -7419,7 +7219,6 @@ CALL sp_populate_etl_kp_sti_treatment();
 CALL sp_populate_etl_kp_peer_calendar();
 CALL sp_populate_etl_kp_peer_tracking();
 CALL sp_populate_etl_kp_treatment_verification();
---CALL sp_populate_etl_gender_based_violence();
 CALL sp_populate_etl_PrEP_verification();
 CALL sp_populate_etl_alcohol_drug_abuse_screening();
 CALL sp_populate_etl_gbv_screening();
@@ -7445,6 +7244,3 @@ UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= populate_scr
 
 SELECT "Completed first time setup", CONCAT("Time: ", NOW());
 END $$
-
-
-
